@@ -1105,10 +1105,10 @@ def plot_missense_cluster_chart(gene_dict,gene):
     disorder_arr = data['disorder_scores']
 
     box_height=1
-    clinvar_missense = gene_dict['clinvar_missense_variants']
-    gnomad_missense = gene_dict['gnomad_missense_variants']
-    clinvar_density = gene_dict['clinvar_density_curve']
-    gnomad_density = gene_dict['gnomad_density_curve']
+    clinvar_missense = data['clinvar_missense_variants']
+    gnomad_missense = data['gnomad_missense_variants']
+    clinvar_density = data['clinvar_density_curve']
+    gnomad_density = data['gnomad_density_curve']
 
     x = list(range(1, length + 1))
     y_diff_arr = np.array(np.subtract(gnomad_density, clinvar_density))
