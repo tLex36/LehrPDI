@@ -606,9 +606,9 @@ def create_individual_missense_gene_dict(gene):
 
     with open("postsynaptic_genes_aiupred_score_list.json", "r") as f:
         score_dict = json.load(f)
-    binding_arr = np.array(score_dict[0][gene][transcript_id]['binding_scores'])
-    disorder_arr = np.array(score_dict[0][gene][transcript_id]['disorder_scores'])
-  
+    score_dict = {k: v for d in score_dict for k, v in d.items()}
+    binding_arr = np.array(score_dict[gene][transcript_id]['binding_scores'])
+    disorder_arr = np.array(score_dict[gene][transcript_id]['disorder_scores'])
         
     #Get the ClinVar data
     root, tmp_variants = fetch_snvs_for_gene(gene, api_key=NCBI_API_KEY)
