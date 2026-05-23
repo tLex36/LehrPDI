@@ -1330,45 +1330,49 @@ with col3:
 
 
 if st.button("Generate"):
-    with st.status("Generating chart...", expanded=True) as status:
+    with st.status("Generating chart (this will take a minute or two while retrieving all variant information)...", expanded=True) as status:
             #Fetch and write the truncation variants
         if transcript_id == "MANE":
             st.write("Fetching MANE transcipt_id")
             transcript_id = get_mane_transcript(gene)
 
-        if os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json"):
-            st.write("Locally accessing clinvar_early_truncation variants")
-            with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "r") as f:
-                my_dict = json.load(f)
-                trunc_clinvar = my_dict
+        # if os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json"):
+        #     st.write("Locally accessing clinvar_early_truncation variants")
+        #     with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "r") as f:
+        #         my_dict = json.load(f)
+        #         trunc_clinvar = my_dict
 
-        if os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json"):
-            st.write("Locally accessing clinvar_early_truncation variants")
-            with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "r") as f:
-                my_dict = json.load(f)
-                trunc_gnomad = my_dict
+        # if os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json"):
+        #     st.write("Locally accessing clinvar_early_truncation variants")
+        #     with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "r") as f:
+        #         my_dict = json.load(f)
+        #         trunc_gnomad = my_dict
 
-        if not (os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json") or os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json")):
+        # if not (os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json") or os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json")):
+        #     st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
+        #     trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
+
             st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
-            trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
-            
-            st.write("Successfully fetched and collated all truncation variants ==> writing locally...")
-            with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "w") as f:
-                json.dump(trunc_clinvar, f, indent=2)
-            with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "w") as f:
-                json.dump(trunc_gnomad, f, indent=2)
+        trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
+        st.write("Successfully fetched and collated all truncation variants...")
+            # with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "w") as f:
+            #     json.dump(trunc_clinvar, f, indent=2)
+            # with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "w") as f:
+            #     json.dump(trunc_gnomad, f, indent=2)
 
-        if os.path.exists(f"{gene}-missense.json"):
-            st.write("Locally accessing clinvar/gnomad missense variants")
-            with open(f"{gene}-missense.json", "r") as f:
-                my_dict = json.load(f)
-                missense_dict = my_dict
+        # if os.path.exists(f"{gene}-missense.json"):
+        #     st.write("Locally accessing clinvar/gnomad missense variants")
+        #     with open(f"{gene}-missense.json", "r") as f:
+        #         my_dict = json.load(f)
+        #         missense_dict = my_dict
 
-        if not (os.path.exists(f"{gene}-missense.json")):
-            st.write("Fetching missense variants from clinvar and gnomad, filtering for truncations, and collating...")
-            missense_dict = create_individual_missense_gene_dict(gene)
-            with open(f"{gene}-missense.json", "w") as f:
-                json.dump(missense_dict, f, indent=2)
+        # if not (os.path.exists(f"{gene}-missense.json")):
+        #     st.write("Fetching missense variants from clinvar and gnomad, filtering for truncations, and collating...")
+        #     missense_dict = create_individual_missense_gene_dict(gene)
+        #     with open(f"{gene}-missense.json", "w") as f:
+        #         json.dump(missense_dict, f, indent=2)
+        st.write("Fetching missense variants from clinvar and gnomad, filtering, and collating...")
+        missense_dict = create_individual_missense_gene_dict(gene)
 
 
         st.write("Fetching exon/intron map...")
