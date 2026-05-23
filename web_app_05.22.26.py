@@ -1314,7 +1314,7 @@ def create_missense_df(missense_dict,transcript_id):
 
 
 st.set_page_config(layout="wide")  # must be the first st. call in your script
-st.title("Roche Lab Variant Viewer 1.0.0-alpha.1(May, 2026")
+st.title("Roche Lab Variant Viewer 1.0.0-alpha.1(May, 2026)")
 
 # gene = st.text_input("Gene name")
 # transcript_id = st.text_input("Transcript ID", "MANE")
