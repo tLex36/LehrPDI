@@ -1101,14 +1101,14 @@ def plot_missense_cluster_chart(gene_dict,gene):
     #     score_dict = json.load(f)
     # binding_arr = np.array(score_dict[0][gene][transcript_id]['binding_scores'])
     # disorder_arr = np.array(score_dict[0][gene][transcript_id]['disorder_scores'])
-    binding_arr = np.array(data[transcript_id]['binding_scores'])
-    disorder_arr = np.array(data[transcript_id]['disorder_scores'])
+    binding_arr = data['binding_scores']
+    disorder_arr = data['disorder_scores']
 
     box_height=1
-    clinvar_missense = gene_dict[transcript_id]['clinvar_missense_variants']
-    gnomad_missense = gene_dict[transcript_id]['gnomad_missense_variants']
-    clinvar_density = gene_dict[transcript_id]['clinvar_density_curve']
-    gnomad_density = gene_dict[transcript_id]['gnomad_density_curve']
+    clinvar_missense = gene_dict['clinvar_missense_variants']
+    gnomad_missense = gene_dict['gnomad_missense_variants']
+    clinvar_density = gene_dict['clinvar_density_curve']
+    gnomad_density = gene_dict['gnomad_density_curve']
 
     x = list(range(1, length + 1))
     y_diff_arr = np.array(np.subtract(gnomad_density, clinvar_density))
@@ -1352,7 +1352,7 @@ if st.button("Generate"):
         #     st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
         #     trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
 
-            st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
+        st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
         trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
         st.write("Successfully fetched and collated all truncation variants...")
             # with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "w") as f:
