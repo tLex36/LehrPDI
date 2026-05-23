@@ -1404,10 +1404,10 @@ if st.button("Generate"):
                     config={"scrollZoom": True})
     
     df_trunc = create_truncation_df(trunc_clinvar, trunc_gnomad, transcript_id)
-    tab1.dataframe(df_trunc.style.applymap(highlight_last_exon_cell, subset=['exon']).applymap(highlight_by_database, subset=['database']))
+    tab1.dataframe(df_trunc.style.map(highlight_last_exon_cell, subset=['exon']).map(highlight_by_database, subset=['database']))
     
     df_missense = create_missense_df(missense_dict,transcript_id)
-    tab2.dataframe(df_missense.style.applymap(highlight_by_database, subset=['database']))
+    tab2.dataframe(df_missense.style.map(highlight_by_database, subset=['database']))
 
     
     #st.dataframe(df, use_container_width=True, height = 300)
