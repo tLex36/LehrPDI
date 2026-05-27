@@ -1403,7 +1403,7 @@ if st.button("Generate"):
     
     tab1.plotly_chart(fig_missense, use_container_width=True,
                     config={"scrollZoom": True})
-     tab2.plotly_chart(fig, use_container_width=True,
+    tab2.plotly_chart(fig, use_container_width=True,
                     config={"scrollZoom": True})
 
     df_missense = create_missense_df(missense_dict,transcript_id)
