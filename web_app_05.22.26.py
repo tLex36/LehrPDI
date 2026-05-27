@@ -1108,8 +1108,8 @@ def plot_missense_cluster_chart(gene_dict,gene):
     #     score_dict = json.load(f)
     # binding_arr = np.array(score_dict[0][gene][transcript_id]['binding_scores'])
     # disorder_arr = np.array(score_dict[0][gene][transcript_id]['disorder_scores'])
-    binding_arr = np.array(data[transcript_id]['binding_scores'])
-    disorder_arr = np.array(data[transcript_id]['disorder_scores'])
+    binding_arr = np.array(data['binding_scores'])
+    disorder_arr = np.array(data['disorder_scores'])
 
     box_height=1
     clinvar_missense = data['clinvar_missense_variants']
