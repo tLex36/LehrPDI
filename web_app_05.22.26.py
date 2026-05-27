@@ -1649,7 +1649,7 @@ if st.button("Generate"):
             clearTimeout(idleTimer);
             viewer.spin(false);  // stop spinning on interaction
             idleTimer = setTimeout(function() {{
-                viewer.spin('y', 1);  // start spinning after 3 seconds idle
+                viewer.spin('y', 0.3);  // start spinning after 3 seconds idle
             }}, 8000);
         }}
 
@@ -1777,5 +1777,6 @@ if st.button("Generate"):
     document.head.appendChild(script);
     </script>
     """
+    with tab21:
+        components.html(html, height=1000)
 
-    tab1.components.html(html,height = 1000)
