@@ -19,6 +19,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 #from aiupred import AIUPred
 
+import matplotlib.colors as mcolors
+import numpy as np
+from Bio.PDB import MMCIFParser
+
+
 
 NCBI_API_KEY = "1df5ddb36d910c631f330dea9da56ed22809"  # or "your_key_here"
 ENSEMBL_VEP_PAYLOAD_SIZE = 200
@@ -609,6 +614,7 @@ def create_individual_missense_gene_dict(gene):
     score_dict = {k: v for d in score_dict for k, v in d.items()}
     binding_arr = score_dict[gene][transcript_id]['binding_scores']
     disorder_arr = score_dict[gene][transcript_id]['disorder_scores']
+  
         
     #Get the ClinVar data
     root, tmp_variants = fetch_snvs_for_gene(gene, api_key=NCBI_API_KEY)
@@ -670,6 +676,7 @@ def create_individual_missense_gene_dict(gene):
     tmp_gene_dict["clinvar_VEP_annotations"] = clinvar_VEP_annotations
     tmp_gene_dict["gnomad_VEP_annotations"] = gnomad_VEP_annotations
     return tmp_gene_dict
+
 def get_uniprot_canonical_transcript(gene_symbol):
     # Search for the reviewed (Swiss-Prot) human entry
     url = "https://rest.uniprot.org/uniprotkb/search"
@@ -1101,13 +1108,13 @@ def plot_missense_cluster_chart(gene_dict,gene):
     #     score_dict = json.load(f)
     # binding_arr = np.array(score_dict[0][gene][transcript_id]['binding_scores'])
     # disorder_arr = np.array(score_dict[0][gene][transcript_id]['disorder_scores'])
-    binding_arr = data['binding_scores']
-    disorder_arr = data['disorder_scores']
+    binding_arr = np.array(data[transcript_id]['binding_scores'])
+    disorder_arr = np.array(data[transcript_id]['disorder_scores'])
 
     box_height=1
     clinvar_missense = data['clinvar_missense_variants']
     gnomad_missense = data['gnomad_missense_variants']
-    clinvar_density = data['clinvar_density_curve']
+    clinvar_density =data['clinvar_density_curve']
     gnomad_density = data['gnomad_density_curve']
 
     x = list(range(1, length + 1))
@@ -1314,7 +1321,7 @@ def create_missense_df(missense_dict,transcript_id):
 
 
 st.set_page_config(layout="wide")  # must be the first st. call in your script
-st.title("Roche Lab Variant Viewer 1.0.0-alpha.1(May, 2026)")
+st.title("Roche Lab Variant Viewer 1.0.1-alpha.1(May, 2026)")
 
 # gene = st.text_input("Gene name")
 # transcript_id = st.text_input("Transcript ID", "MANE")
@@ -1330,49 +1337,45 @@ with col3:
 
 
 if st.button("Generate"):
-    with st.status("Generating chart (this will take a minute or two while retrieving all variant information)...", expanded=True) as status:
+    with st.status("Generating chart...", expanded=True) as status:
             #Fetch and write the truncation variants
         if transcript_id == "MANE":
             st.write("Fetching MANE transcipt_id")
             transcript_id = get_mane_transcript(gene)
 
-        # if os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json"):
-        #     st.write("Locally accessing clinvar_early_truncation variants")
-        #     with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "r") as f:
-        #         my_dict = json.load(f)
-        #         trunc_clinvar = my_dict
+        if os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json"):
+            st.write("Locally accessing clinvar_early_truncation variants")
+            with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "r") as f:
+                my_dict = json.load(f)
+                trunc_clinvar = my_dict
 
-        # if os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json"):
-        #     st.write("Locally accessing clinvar_early_truncation variants")
-        #     with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "r") as f:
-        #         my_dict = json.load(f)
-        #         trunc_gnomad = my_dict
+        if os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json"):
+            st.write("Locally accessing clinvar_early_truncation variants")
+            with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "r") as f:
+                my_dict = json.load(f)
+                trunc_gnomad = my_dict
 
-        # if not (os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json") or os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json")):
-        #     st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
-        #     trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
+        if not (os.path.exists(f"{gene}-{transcript_id}_gnomad_early_truncations.json") or os.path.exists(f"{gene}-{transcript_id}_clinvar_early_truncations.json")):
+            st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
+            trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
+            
+            st.write("Successfully fetched and collated all truncation variants ==> writing locally...")
+            with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "w") as f:
+                json.dump(trunc_clinvar, f, indent=2)
+            with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "w") as f:
+                json.dump(trunc_gnomad, f, indent=2)
 
-        st.write("Fetching variants from clinvar and gnomad, filtering for truncations, and collating...")
-        trunc_clinvar, trunc_gnomad = collate_truncation_variants(gene)
-        st.write("Successfully fetched and collated all truncation variants...")
-            # with open(f"{gene}-{transcript_id}_clinvar_early_truncations.json", "w") as f:
-            #     json.dump(trunc_clinvar, f, indent=2)
-            # with open(f"{gene}-{transcript_id}_gnomad_early_truncations.json", "w") as f:
-            #     json.dump(trunc_gnomad, f, indent=2)
+        if os.path.exists(f"{gene}-missense.json"):
+            st.write("Locally accessing clinvar/gnomad missense variants")
+            with open(f"{gene}-missense.json", "r") as f:
+                my_dict = json.load(f)
+                missense_dict = my_dict
 
-        # if os.path.exists(f"{gene}-missense.json"):
-        #     st.write("Locally accessing clinvar/gnomad missense variants")
-        #     with open(f"{gene}-missense.json", "r") as f:
-        #         my_dict = json.load(f)
-        #         missense_dict = my_dict
-
-        # if not (os.path.exists(f"{gene}-missense.json")):
-        #     st.write("Fetching missense variants from clinvar and gnomad, filtering for truncations, and collating...")
-        #     missense_dict = create_individual_missense_gene_dict(gene)
-        #     with open(f"{gene}-missense.json", "w") as f:
-        #         json.dump(missense_dict, f, indent=2)
-        st.write("Fetching missense variants from clinvar and gnomad, filtering, and collating...")
-        missense_dict = create_individual_missense_gene_dict(gene)
+        if not (os.path.exists(f"{gene}-missense.json")):
+            st.write("Fetching missense variants from clinvar and gnomad, filtering for truncations, and collating...")
+            missense_dict = create_individual_missense_gene_dict(gene)
+            with open(f"{gene}-missense.json", "w") as f:
+                json.dump(missense_dict, f, indent=2)
 
 
         st.write("Fetching exon/intron map...")
@@ -1396,18 +1399,21 @@ if st.button("Generate"):
     last_exon = get_last_coding_exon_number(transcript_id, region_map, cds_regions)
     def highlight_last_exon_cell(val):
         return "background-color: yellow" if val == last_exon else""
-    tab1, tab2 = st.tabs(["Truncations", "Missense"])
-    tab1.plotly_chart(fig, use_container_width=True,
+    tab1, tab2 = st.tabs(["Missense", "Truncations"])
+    
+    tab1.plotly_chart(fig_missense, use_container_width=True,
                     config={"scrollZoom": True})
     
-    tab2.plotly_chart(fig_missense, use_container_width=True,
+    df_missense = create_missense_df(missense_dict,transcript_id)
+    tab1.dataframe(df_missense.style.applymap(highlight_by_database, subset=['database'])) 
+    
+    tab2.plotly_chart(fig, use_container_width=True,
                     config={"scrollZoom": True})
     
     df_trunc = create_truncation_df(trunc_clinvar, trunc_gnomad, transcript_id)
-    tab1.dataframe(df_trunc.style.map(highlight_last_exon_cell, subset=['exon']).map(highlight_by_database, subset=['database']))
+    tab2.dataframe(df_trunc.style.applymap(highlight_last_exon_cell, subset=['exon']).applymap(highlight_by_database, subset=['database']))
     
-    df_missense = create_missense_df(missense_dict,transcript_id)
-    tab2.dataframe(df_missense.style.map(highlight_by_database, subset=['database']))
+   
 
     
     #st.dataframe(df, use_container_width=True, height = 300)
@@ -1431,3 +1437,346 @@ if st.button("Generate"):
     # """
 
     # components.html(icn3d_html, height=540)
+
+    #=======================================================================================================
+#Adding the structure figure
+#=======================================================================================================
+
+    DISORDER_THRESHOLD = 0.5
+    transcript_id = get_mane_transcript(gene)
+    data = missense_dict[transcript_id]
+    length = data["length"]
+    with open("first_draft_web_app/postsynaptic_genes_aiupred_score_list.json", "r") as f:
+        score_dict = json.load(f)
+
+    binding_arr = np.array(data['binding_scores'])
+    disorder_arr = np.array(data['disorder_scores'])
+
+    clinvar_missense = data['clinvar_missense_variants']
+    gnomad_missense = data['gnomad_missense_variants']
+    clinvar_density = np.array(data['clinvar_density_curve'])
+    clinvar_density_norm = (clinvar_density - clinvar_density.min())/ (clinvar_density.max() - clinvar_density.min())
+    gnomad_density = np.array(data['gnomad_density_curve'])
+    gnomad_density_norm = (gnomad_density - gnomad_density.min())/ (gnomad_density.max() - gnomad_density.min())
+    tolerance_values = np.array(np.subtract(gnomad_density, clinvar_density))
+    tolerance_values_norm = (tolerance_values - tolerance_values.min())/ (tolerance_values.max() - tolerance_values.min())
+
+    residue_numbers = list(range(0,len(tolerance_values)))
+    # 100 colors from red → blue
+    cmap = plt.cm.RdBu_r
+    colors = [mcolors.to_hex(cmap(i / 99)) for i in range(100)]
+    viridis_cmap = plt.cm.viridis
+    viridis_colors = [mcolors.to_hex(viridis_cmap(i / 99)) for i in range(100)]
+
+    # colors[0]  = red
+    # colors[99] = blue
+
+    def get_alphafold_cif(uniprot_id):
+        # fetch metadata to get the correct URL
+        api_url = f"https://alphafold.ebi.ac.uk/api/prediction/{uniprot_id}"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        
+        data = response.json()[0]
+        cif_url = data["cifUrl"]  # correct URL from the API
+        
+        cif_response = requests.get(cif_url)
+        cif_response.raise_for_status()
+        return cif_response.text
+
+    def get_uniprot_id(gene):
+
+        response = requests.get(
+            "https://rest.uniprot.org/uniprotkb/search",
+            params={
+                "query": f"gene:{gene} AND organism_id:9606 AND reviewed:true",
+                "fields": "accession,gene_names",
+                "format": "json"
+            }
+        )
+
+        results = response.json()["results"]
+        for r in results:
+            print(r["primaryAccession"], r["genes"])
+        return results[0]['primaryAccession']
+
+    #Add the list values
+    min_val = min(tolerance_values_norm)
+    max_val = max(tolerance_values_norm)
+    def value_to_index(val):
+        return int((val - min_val) / (max_val - min_val) * 99)
+
+    gene = "NLGN3"
+    cif_string_af = get_alphafold_cif(get_uniprot_id(gene))
+
+    parser = MMCIFParser(QUIET=True)
+    structure = parser.get_structure(gene+"_structure", io.StringIO(cif_string_af))
+
+    js_tolerance = str({r: colors[value_to_index(v)] for r, v in zip(residue_numbers, tolerance_values_norm)})
+    js_tolerance_values = str({r: round(float(v), 3) for r, v in zip(residue_numbers, tolerance_values)})
+    
+    js_gnomad = str({r: colors[value_to_index(v)] for r, v in zip(residue_numbers, gnomad_density_norm)})
+    js_gnomad_values = str({r: round(float(v), 3) for r, v in zip(residue_numbers, gnomad_density)})
+    
+    js_clinvar = str({r: colors[value_to_index(v)] for r, v in zip(residue_numbers, clinvar_density_norm)})
+    js_clinvar_values = str({r: round(float(v), 3) for r, v in zip(residue_numbers, clinvar_density)})
+
+    js_binding = str({r: viridis_colors[value_to_index(v)] for r, v in zip(residue_numbers, binding_arr)})
+    js_binding_values = str({r: round(float(v), 3) for r, v in zip(residue_numbers, binding_arr)})
+    
+    js_disorder = str({r: viridis_colors[value_to_index(v)] for r, v in zip(residue_numbers, disorder_arr)})
+    js_disorder_values = str({r: round(float(v), 3) for r, v in zip(residue_numbers, disorder_arr)})
+    
+
+
+    cif_escaped = cif_string_af.replace('\\', '\\\\').replace('`', '\\`')
+    viewer_id = f"viewer_window"
+
+    html = f"""
+    <div style="width: 100%;display:flex; flex-direction: column; align-items: center; gap: 10px;">
+
+    <!-- Row 1: text input + button -->
+    <div style="display:flex; gap:8px; align-items:center;">
+        <input id="pdb-input" type="text" placeholder="Enter PDB ID (e.g. 8GS3)"
+               style="padding:6px; font-size:13px; width:220px;">
+        <button onclick="loadPDB()" style="padding:6px 12px; font-size:13px;">Load</button>
+        <span id="pdb-status" style="font-size:12px; color:grey;"></span>
+    </div>
+
+
+    <!-- Row 2: dropdowns -->
+    <div style="display:flex; gap:20px; color:white;">
+        <label>Cartoon:
+            <select onchange="setCartoon(this.value)" style="
+                padding:6px 12px; border:1px solid #ccc; border-radius:6px;
+                background:white; font-size:13px; cursor:pointer;
+                box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <option value="none">None</option>
+                <option value="spectrum" selected>Spectrum</option>
+                <option value="clinvar">ClinVar</option>
+                <option value="gnomad">GnomAD</option>
+                <option value="tolerance">Tolerance</option>
+                <option value="binding">AIUPred Binding</option>
+                <option value="disorder">AIUPred Disorder</option>
+                <option value="chain">Chain</option>
+                <option value="residue">Residue Type['amino']</option>
+                <option value="rasmol">Residue['rasmol']</option>
+            </select>
+        </label>
+        <label>Surface:
+            <select onchange="setSurface(this.value)" style="
+                padding:6px 12px; border:1px solid #ccc; border-radius:6px;
+                background:white; font-size:13px; cursor:pointer;
+                box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <option value="none" selected>None</option>
+                <option value="white">White</option>
+                <option value="hydro">Hydrophobicity</option>
+                <option value="chain">Chain</option>
+                <option value="ss">2° Structure</option>
+                <option value="tolerance">Tolerance</option>
+            </select>
+        </label>
+    </div>
+
+    <!-- Row 3: viewer -->
+    <div id="{viewer_id}" style="width:90%; height:600px; position:relative;"></div>
+
+    </div>
+    <script>
+    var script = document.createElement('script');
+    script.src = 'https://3Dmol.org/build/3Dmol-min.js';
+    script.onload = function() {{
+
+        var viewer = $3Dmol.createViewer(document.getElementById("{viewer_id}"), {{backgroundColor: "#0f1116"}});
+        viewer.addModel(`{cif_escaped}`, 'cif');
+        viewer.setStyle({{}}, {{cartoon: {{color: 'grey'}}}});
+        viewer.zoomTo();
+        viewer.render();
+
+        var toleranceColors = {js_tolerance};
+        var toleranceValues = {js_tolerance_values};
+
+        var gnomadColors = {js_gnomad};
+        var gnomadValues = {js_gnomad_values};
+
+        var clinvarColors = {js_clinvar};
+        var clinvarValues = {js_clinvar_values};
+        
+        var bindingColors = {js_binding};
+        var bindingValues = {js_binding_values};
+        
+        var disorderColors = {js_disorder};
+        var disorderValues = {js_disorder_values};
+
+        window.loadPDB = function() {{
+        var pdbId = document.getElementById('pdb-input').value.trim().toUpperCase();
+        if (!pdbId || pdbId == "AF") {{
+        url = 'https://alphafold.ebi.ac.uk/files/AF-' + {get_uniprot_id(gene)} + '-F1-model_v4.cif';
+        }} else {{
+        url = 'https://files.rcsb.org/download/' + pdbId + '.cif';
+        }}
+
+        var status = document.getElementById('pdb-status');
+        status.textContent = 'Loading...';
+        status.style.color = 'grey';
+
+        fetch(url)
+            .then(function(response) {{
+                if (!response.ok) throw new Error('PDB ID not found');
+                return response.text();
+            }})
+            .then(function(cifData) {{
+                viewer.removeAllModels();
+                viewer.removeAllSurfaces();
+                currentSurface = null;
+                viewer.addModel(cifData, 'cif');
+                viewer.setStyle({{}}, {{cartoon: {{color: 'spectrum'}}}});
+                viewer.zoomTo();
+                viewer.render();
+                status.textContent = pdbId + ' loaded';
+                status.style.color = 'green';
+            }})
+            .catch(function(err) {{
+                status.textContent = 'Error: ' + err.message;
+                status.style.color = 'red';
+            }});
+        }}
+        document.getElementById('pdb-input').addEventListener('keydown', function(e) {{
+        if (e.key === 'Enter') loadPDB();
+        }});
+        var idleTimer = null;
+
+        function resetIdleTimer() {{
+            clearTimeout(idleTimer);
+            viewer.spin(false);  // stop spinning on interaction
+            idleTimer = setTimeout(function() {{
+                viewer.spin('y', 1);  // start spinning after 3 seconds idle
+            }}, 8000);
+        }}
+
+        // Stop spin and reset timer on any user interaction
+        document.getElementById('{viewer_id}').addEventListener('mousedown', resetIdleTimer);
+        document.getElementById('{viewer_id}').addEventListener('wheel',     resetIdleTimer);
+        document.getElementById('{viewer_id}').addEventListener('touchstart', resetIdleTimer);
+
+        resetIdleTimer();  // start the timer on load
+
+
+        // Hover functionality
+    viewer.setHoverable({{}}, true,
+        function(atom, viewer) {{
+            if (!atom.label) {{
+            var val = toleranceValues[atom.resi] !== undefined
+                ? toleranceValues[atom.resi].toFixed(3)
+                : "N/A";
+                atom.label = viewer.addLabel(
+                    atom.resn + atom.resi + " | tolerance: " + val,
+                    {{position: atom, backgroundColor: "black", fontColor: "white", fontSize: 12}}
+                );
+            }}
+        }},
+        function(atom, viewer) {{
+            if (atom.label) {{
+                viewer.removeLabel(atom.label);
+                delete atom.label;
+            }}
+        }}
+    );
+
+    var cartoonOn = true;
+    window.setCartoon = function(scheme) {{
+        if (scheme === 'none') {{
+            viewer.setStyle({{}}, {{}});
+            viewer.render();
+            return;
+        }}
+        if (scheme == 'spectrum') {{
+        viewer.setStyle({{}}, {{cartoon: {{color: 'spectrum'}}}});
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'clinvar') {{
+        for (var resi in toleranceColors) {{
+            viewer.setStyle({{resi: parseInt(resi)}}, {{cartoon: {{color: clinvarColors[resi]}}}});
+        }}
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'gnomad') {{
+        for (var resi in clinvarColors) {{
+            viewer.setStyle({{resi: parseInt(resi)}}, {{cartoon: {{color: gnomadColors[resi]}}}});
+        }}
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'tolerance') {{
+        for (var resi in toleranceColors) {{
+            viewer.setStyle({{resi: parseInt(resi)}}, {{cartoon: {{color: toleranceColors[resi]}}}});
+        }}
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'binding') {{
+        for (var resi in bindingColors) {{
+            viewer.setStyle({{resi: parseInt(resi)}}, {{cartoon: {{color: bindingColors[resi]}}}});
+        }}
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'disorder') {{
+        for (var resi in disorderColors) {{
+            viewer.setStyle({{resi: parseInt(resi)}}, {{cartoon: {{color: disorderColors[resi]}}}});
+        }}
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'residue') {{
+        viewer.setStyle({{}}, {{cartoon: {{colorscheme: 'amino'}}}});
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'chain') {{
+        viewer.setStyle({{}}, {{cartoon: {{colorscheme: 'chainHetatm'}}}});
+        viewer.render();
+        return;
+        }}
+        if (scheme == 'rasmol') {{
+        viewer.setStyle({{}}, {{cartoon: {{colorscheme: 'rasmol'}}}});
+        viewer.render();
+        return;
+        }}
+        // ... rest of your existing setCartoon logic
+    }}
+
+    var currentSurface = null;
+
+    window.setSurface = function(scheme) {{
+        if (currentSurface !== null) {{
+            viewer.removeSurface(currentSurface);
+            currentSurface = null;
+        }}
+        if (scheme === 'none') {{ viewer.render(); return; }}
+
+        var style = {{opacity: 0.6}};
+        if      (scheme === 'white') {{ style.color = 'white'; }}
+        else if (scheme === 'hydro') {{ style.colorscheme = 'hydrophobicity'; }}
+        else if (scheme === 'chain') {{ style.colorscheme = 'chainHetatm'; }}
+        else if (scheme === 'ss')    {{ style.colorscheme = 'ssJmol'; }}
+        else if (scheme == 'tolerance') {{ style.colorscheme = {{prop: 'resi', map: toleranceColors}}; style.opacity = 0.65; }}
+        else if (scheme == 'binding') {{ style.colorscheme = {{prop: 'resi', map: bindingColors}}; style.opacity = 0.65; }}
+        else if (scheme == 'disorder') {{ style.colorscheme = {{prop: 'resi', map: disorderColors}}; style.opacity = 0.65; }}
+
+        viewer.addSurface($3Dmol.SurfaceType.VDW, style).then(function(id) {{
+            currentSurface = id;
+            viewer.render();
+        }});
+    }}
+    }};
+
+
+
+    document.head.appendChild(script);
+    </script>
+    """
+
+    tab1.components.html(html,height = 1000)
