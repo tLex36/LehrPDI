@@ -1445,7 +1445,7 @@ if st.button("Generate"):
     transcript_id = get_mane_transcript(gene)
     data = missense_dict[transcript_id]
     length = data["length"]
-    with open("first_draft_web_app/postsynaptic_genes_aiupred_score_list.json", "r") as f:
+    with open("postsynaptic_genes_aiupred_score_list.json", "r") as f:
         score_dict = json.load(f)
 
     binding_arr = np.array(data['binding_scores'])
