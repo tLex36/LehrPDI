@@ -1408,9 +1408,12 @@ if st.button("Generate"):
 
     df_missense = create_missense_df(missense_dict,transcript_id)
     tab1.dataframe(df_missense.style.map(highlight_by_database, subset=['database']))
+    with tab1:
+        components.html(html, height=1000)
     
     df_trunc = create_truncation_df(trunc_clinvar, trunc_gnomad, transcript_id)
     tab2.dataframe(df_trunc.style.map(highlight_last_exon_cell, subset=['exon']).map(highlight_by_database, subset=['database']))
+
     
    
 
@@ -1777,6 +1780,5 @@ if st.button("Generate"):
     document.head.appendChild(script);
     </script>
     """
-    with tab1:
-        components.html(html, height=1000)
+
 
