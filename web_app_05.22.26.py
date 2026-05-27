@@ -18,6 +18,8 @@ from scipy.stats import binom
 import matplotlib.pyplot as plt
 import numpy as np
 #from aiupred import AIUPred
+import streamlit.components.v1 as components 
+
 
 import matplotlib.colors as mcolors
 import numpy as np
