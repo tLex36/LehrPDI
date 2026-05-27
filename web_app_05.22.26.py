@@ -1777,6 +1777,6 @@ if st.button("Generate"):
     document.head.appendChild(script);
     </script>
     """
-    with tab21:
+    with tab1:
         components.html(html, height=1000)
 
